@@ -1,4 +1,5 @@
 import { auth } from "./firebase.js";
+import { initGrants, stopGrants } from "./grants.js";
 import {
   GoogleAuthProvider,
   signInWithPopup,
@@ -22,7 +23,10 @@ onAuthStateChanged(auth, (user) => {
     // URLの #calendar などを見て、開くタブを決める
     const tab = location.hash.replace("#", "") || "home";
     showTab(tab);
+    // 各画面のデータ読み込みを開始
+    initGrants(user);
   } else {
+    stopGrants();
     appView.hidden = true;
     loginView.hidden = false;
   }
