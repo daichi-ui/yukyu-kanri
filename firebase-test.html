@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase 接続テスト</title>
+  <style>
+    body { font-family: sans-serif; padding: 16px; line-height: 1.6; }
+    button { font-size: 16px; padding: 8px 16px; margin: 4px 0; }
+    #log { background: #f4f4f4; padding: 12px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Firebase 接続テスト</h1>
+
+  <button id="loginBtn">Googleでログイン</button>
+  <button id="logoutBtn">ログアウト</button>
+  <button id="writeBtn">テストデータを保存</button>
+  <button id="readBtn">テストデータを読み込み</button>
+
+  <h2>結果</h2>
+  <div id="log">まだ何もしていません</div>
+
+  <script type="module">
+    // Firebase の読み込み（ダウンロード不要。ネットから読み込む）
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // ▼▼▼ ここを Firebase コンソールでコピーした内容に置き換える ▼▼▼
+    const firebaseConfig = {
+      apiKey: "AIzaSyDaVnPZzXxzUw5HICkCVkqQiMjeeyDoaGA",
+      authDomain: "paidtimeoff-3176d.firebaseapp.com",
+      projectId: "paidtimeoff-3176d",
+      storageBucket: "paidtimeoff-3176d.firebasestorage.app",
+      messagingSenderId: "630941187964",
+      appId: "1:630941187964:web:d99d66bcfdb665110caef9"
+    };
+    // ▲▲▲ ここまで ▲▲▲
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const log = (msg) => { document.getElementById("log").textContent = msg; };
+
+    // ログイン状態が変わったら表示
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        log(`ログイン中: ${user.email}\nUID: ${user.uid}`);
+      } else {
+        log("ログアウト中");
+      }
+    });
+
+    // ログイン
+    document.getElementById("loginBtn").onclick = async () => {
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (e) {
+        log("ログイン失敗: " + e.message);
+      }
+    };
+
+    // ログアウト
+    document.getElementById("logoutBtn").onclick = () => signOut(auth);
+
+    // 保存（users/自分のUID/test/hello に書き込む）
+    document.getElementById("writeBtn").onclick = async () => {
+      const user = auth.currentUser;
+      if (!user) return log("先にログインしてください");
+      try {
+        await setDoc(doc(db, "users", user.uid, "test", "hello"), {
+          message: "こんにちは",
+          savedAt: new Date().toISOString()
+        });
+        log("保存しました");
+      } catch (e) {
+        log("保存失敗: " + e.message);
+      }
+    };
+
+    // 読み込み
+    document.getElementById("readBtn").onclick = async () => {
+      const user = auth.currentUser;
+      if (!user) return log("先にログインしてください");
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid, "test", "hello"));
+        log(snap.exists() ? "読み込み成功:\n" + JSON.stringify(snap.data(), null, 2) : "データがありません");
+      } catch (e) {
+        log("読み込み失敗: " + e.message);
+      }
+    };
+  </script>
+</body>
+</html>
