@@ -38,7 +38,35 @@
       </section>
 
       <section id="tab-calendar" class="page" data-title="カレンダー" hidden>
-        <p class="placeholder">カレンダーをここに表示します（準備中）</p>
+        <div class="card cal">
+          <div class="cal-head">
+            <button id="calPrev" class="cal-nav" aria-label="前の月">‹</button>
+            <h2 id="calTitle" class="cal-title"></h2>
+            <button id="calNext" class="cal-nav" aria-label="次の月">›</button>
+          </div>
+
+          <div class="cal-week">
+            <span class="is-sun">日</span><span>月</span><span>火</span><span>水</span>
+            <span>木</span><span>金</span><span class="is-sat">土</span>
+          </div>
+          <div id="calGrid" class="cal-grid"></div>
+
+          <div class="cal-foot">
+            <span id="calMonthTotal"></span>
+            <button id="calToday" class="btn-small">今日</button>
+          </div>
+        </div>
+
+        <div class="cal-legend">
+          <span class="cal-chip chip-paid">有給</span>
+          <span class="cal-chip chip-anniversary">アニバ</span>
+          <span class="cal-chip chip-paid is-planned">予定</span>
+          <span class="cal-chip chip-grant">付与</span>
+        </div>
+
+        <h2 id="calDetailTitle" class="section-title"></h2>
+        <div id="calDetail" class="list"></div>
+        <button id="calAddBtn" class="btn btn-primary btn-block cal-add">＋ この日に登録</button>
       </section>
 
       <section id="tab-history" class="page" data-title="履歴" hidden>

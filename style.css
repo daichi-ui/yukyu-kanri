@@ -416,3 +416,126 @@ button { font: inherit; cursor: pointer; }
   color: var(--error);
   font-weight: 600;
 }
+
+/* ===== カレンダー ===== */
+.cal {
+  padding: 12px 8px;
+}
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.cal-title {
+  margin: 0;
+  font-size: 17px;
+}
+.cal-nav {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text);
+}
+.cal-week,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.cal-week span {
+  text-align: center;
+  font-size: 12px;
+  color: var(--sub);
+  padding-bottom: 4px;
+}
+.cal-day {
+  min-height: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 1px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+}
+.cal-day.is-blank { visibility: hidden; }
+.cal-num {
+  font-size: 13px;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  border-radius: 50%;
+  text-align: center;
+}
+.cal-week .is-sun, .cal-day.is-sun .cal-num { color: #c0392b; }
+.cal-week .is-sat, .cal-day.is-sat .cal-num { color: #2c6fbb; }
+.cal-day.is-today .cal-num {
+  background: var(--main);
+  color: var(--white);
+  font-weight: 700;
+}
+.cal-day.is-selected {
+  border-color: var(--main);
+  background: var(--main-light);
+}
+.cal-marks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.cal-chip {
+  display: inline-block;
+  min-width: 26px;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  border: 1px solid transparent;
+}
+.chip-paid {
+  background: var(--main);
+  color: var(--white);
+}
+.chip-anniversary {
+  background: #e08a3c;
+  color: var(--white);
+}
+.cal-chip.is-planned {
+  background: var(--white);
+  border-style: dashed;
+}
+.chip-paid.is-planned { color: var(--main); border-color: var(--main); }
+.chip-anniversary.is-planned { color: #e08a3c; border-color: #e08a3c; }
+.chip-grant {
+  background: var(--bg);
+  color: var(--sub);
+  border-color: var(--line);
+}
+.cal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 4px;
+  font-size: 13px;
+  color: var(--sub);
+}
+.cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.cal-add {
+  margin-top: 12px;
+}
