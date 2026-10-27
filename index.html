@@ -29,7 +29,12 @@
 
     <main class="main">
       <section id="tab-home" class="page" data-title="ホーム">
-        <p class="placeholder">残日数をここに表示します（準備中）</p>
+        <div id="homeSummary" class="summary"></div>
+
+        <button id="homeAddBtn" class="btn btn-primary btn-block">＋ 取得・予定を登録</button>
+
+        <h2 class="section-title">直近の予定</h2>
+        <div id="homeUpcoming" class="list"></div>
       </section>
 
       <section id="tab-calendar" class="page" data-title="カレンダー" hidden>

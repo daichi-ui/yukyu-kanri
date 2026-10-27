@@ -2,6 +2,7 @@ import { auth } from "./firebase.js";
 import { initStore, stopStore } from "./store.js";
 import { resetGrantForm } from "./grants.js";
 import "./leaves.js";
+import "./home.js";
 import {
   GoogleAuthProvider,
   signInWithPopup,
