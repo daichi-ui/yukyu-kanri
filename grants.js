@@ -12,7 +12,8 @@ import {
 const form = document.getElementById("grantForm");
 const formTitle = document.getElementById("grantFormTitle");
 const typeInput = document.getElementById("grantType");
-const dateInput = document.getElementById("grantDate");
+const yearInput = document.getElementById("grantYear");
+const dateText = document.getElementById("grantDateText");
 const daysInput = document.getElementById("grantDays");
 const memoInput = document.getElementById("grantMemo");
 const expireText = document.getElementById("grantExpire");
@@ -22,6 +23,18 @@ const msg = document.getElementById("grantMsg");
 const list = document.getElementById("grantList");
 
 let editingId = null; // 編集中のデータID（新規登録なら null）
+
+// 付与年の選択肢（2年前〜来年）
+const thisYear = new Date().getFullYear();
+for (let y = thisYear - 2; y <= thisYear + 1; y++) {
+  yearInput.add(new Option(`${y}年`, String(y)));
+}
+
+// 選んだ種別・年から付与日を作る（有給→10月1日、アニバーサリー→4月1日）
+function currentGrantDate() {
+  const mm = String(LEAVE_TYPES[typeInput.value].grantMonth).padStart(2, "0");
+  return `${yearInput.value}-${mm}-01`;
+}
 
 // データが変わったら一覧を描き直す
 subscribe(render);
@@ -43,23 +56,23 @@ export function resetGrantForm() {
 // 種別に合わせて、付与日と日数の初期値を入れる
 function setDefaults() {
   const type = typeInput.value;
-  dateInput.value = latestGrantDate(LEAVE_TYPES[type].grantMonth);
+  yearInput.value = latestGrantDate(LEAVE_TYPES[type].grantMonth).slice(0, 4);
   daysInput.value = type === "anniversary" ? LEAVE_TYPES.anniversary.days : "";
   updateExpire();
 }
 
-// 有効期限の表示を更新
+// 付与日と有効期限の表示を更新
 function updateExpire() {
-  expireText.textContent = dateInput.value
-    ? formatDate(calcExpireDate(dateInput.value, typeInput.value))
-    : "-";
+  const grantDate = currentGrantDate();
+  dateText.textContent = formatDate(grantDate);
+  expireText.textContent = formatDate(calcExpireDate(grantDate, typeInput.value));
 }
 
 typeInput.addEventListener("change", () => {
   if (!editingId) setDefaults();
   else updateExpire();
 });
-dateInput.addEventListener("change", updateExpire);
+yearInput.addEventListener("change", updateExpire);
 cancelBtn.addEventListener("click", resetGrantForm);
 
 // 登録・更新
@@ -68,10 +81,9 @@ form.addEventListener("submit", async (e) => {
   msg.textContent = "";
 
   const type = typeInput.value;
-  const grantDate = dateInput.value;
+  const grantDate = currentGrantDate();
   const days = Number(daysInput.value);
 
-  if (!grantDate) return showMsg("付与日を入力してください", true);
   if (!(days > 0)) return showMsg("付与日数を正しく入力してください", true);
 
   // 同じ種別・同じ付与日のデータがすでにあれば確認する
@@ -117,7 +129,11 @@ function startEdit(id) {
   editingId = id;
   typeInput.value = g.type;
   typeInput.disabled = !!g.auto; // 自動付与は種別を変えない
-  dateInput.value = g.grantDate;
+  const year = g.grantDate.slice(0, 4);
+  if (![...yearInput.options].some((o) => o.value === year)) {
+    yearInput.add(new Option(`${year}年`, year), 0);
+  }
+  yearInput.value = year;
   daysInput.value = g.days;
   memoInput.value = g.memo || "";
   updateExpire();

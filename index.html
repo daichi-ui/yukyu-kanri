@@ -33,8 +33,8 @@
 
         <button id="homeAddBtn" class="btn btn-primary btn-block">＋ 取得・予定を登録</button>
 
-        <h2 class="section-title">直近の予定</h2>
-        <div id="homeUpcoming" class="list"></div>
+        <h2 id="homeMonthTitle" class="section-title"></h2>
+        <div id="homeMonth" class="list"></div>
       </section>
 
       <section id="tab-calendar" class="page" data-title="カレンダー" hidden>
@@ -69,16 +69,6 @@
         <button id="calAddBtn" class="btn btn-primary btn-block cal-add">＋ この日に登録</button>
       </section>
 
-      <section id="tab-history" class="page" data-title="履歴" hidden>
-        <button id="leaveAddBtn" class="btn btn-primary btn-block">＋ 取得・予定を登録</button>
-
-        <h2 class="section-title">予定</h2>
-        <div id="plannedList" class="list"></div>
-
-        <h2 class="section-title">取得済み</h2>
-        <div id="takenList" class="list"></div>
-      </section>
-
       <section id="tab-grants" class="page" data-title="付与管理" hidden>
         <form id="grantForm" class="card">
           <h2 id="grantFormTitle" class="card-title">付与を登録</h2>
@@ -92,8 +82,8 @@
           </label>
 
           <label class="field">
-            <span class="field-label">付与日</span>
-            <input type="date" id="grantDate" required>
+            <span class="field-label">付与年</span>
+            <select id="grantYear"></select>
           </label>
 
           <label class="field">
@@ -101,7 +91,7 @@
             <input type="number" id="grantDays" min="0" step="any" inputmode="decimal" placeholder="例：20" required>
           </label>
 
-          <p class="field-note">有効期限：<strong id="grantExpire">-</strong></p>
+          <p class="field-note">付与日：<strong id="grantDateText">-</strong><br>有効期限：<strong id="grantExpire">-</strong></p>
 
           <label class="field">
             <span class="field-label">メモ（任意）</span>
@@ -129,10 +119,6 @@
       <button class="tab" data-tab="calendar">
         <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
         <span>カレンダー</span>
-      </button>
-      <button class="tab" data-tab="history">
-        <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-        <span>履歴</span>
       </button>
       <button class="tab" data-tab="grants">
         <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>

@@ -52,7 +52,7 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
 });
 
 // ===== タブ切り替え =====
-const TABS = ["home", "calendar", "history", "grants"];
+const TABS = ["home", "calendar", "grants"];
 
 function showTab(name) {
   if (!TABS.includes(name)) name = "home";

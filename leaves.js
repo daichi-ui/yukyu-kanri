@@ -1,10 +1,10 @@
-// ===== 取得・予定の登録と履歴一覧 =====
+// ===== 取得・予定の登録・編集・削除（入力画面） =====
 import {
   doc, addDoc, updateDoc, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { state, subscribe, leavesRef } from "./store.js";
-import { calculate, leaveDays, kindLabel } from "./calc.js";
-import { LEAVE_TYPES, today, formatDateWeek, formatDays, escapeHtml } from "./utils.js";
+import { state, leavesRef } from "./store.js";
+import { calculate } from "./calc.js";
+import { today, formatDays } from "./utils.js";
 
 // ===== 画面の要素 =====
 const dialog = document.getElementById("leaveDialog");
@@ -19,13 +19,8 @@ const memoInput = document.getElementById("leaveMemo");
 const submitBtn = document.getElementById("leaveSubmit");
 const deleteBtn = document.getElementById("leaveDelete");
 const msg = document.getElementById("leaveMsg");
-const plannedList = document.getElementById("plannedList");
-const takenList = document.getElementById("takenList");
 
 let editingId = null; // 編集中のデータID（新規登録なら null）
-
-// データが変わったら一覧を描き直す
-subscribe(render);
 
 // ===== 入力画面（ダイアログ） =====
 
@@ -135,57 +130,3 @@ function showMsg(text, isError = false) {
   msg.textContent = text;
   msg.classList.toggle("error", isError);
 }
-
-// ===== 履歴一覧の表示 =====
-function render() {
-  if (!state.uid) {
-    plannedList.innerHTML = "";
-    takenList.innerHTML = "";
-    return;
-  }
-
-  const t = today();
-  const { shortageByLeave } = calculate(state.grants, state.leaves, t);
-
-  // 予定：近い順、取得済み：新しい順
-  const planned = state.leaves
-    .filter((l) => l.date > t)
-    .sort((a, b) => a.date.localeCompare(b.date));
-  const taken = state.leaves
-    .filter((l) => l.date <= t)
-    .sort((a, b) => b.date.localeCompare(a.date));
-
-  plannedList.innerHTML = planned.length
-    ? planned.map((l) => itemHtml(l, shortageByLeave[l.id])).join("")
-    : `<p class="empty">予定はありません</p>`;
-
-  takenList.innerHTML = taken.length
-    ? taken.map((l) => itemHtml(l, shortageByLeave[l.id])).join("")
-    : `<p class="empty">まだ取得の記録がありません</p>`;
-}
-
-function itemHtml(l, shortage) {
-  return `
-    <button class="item item-button" data-id="${l.id}">
-      <div class="item-head">
-        <span class="item-date">${formatDateWeek(l.date)}</span>
-        <span class="item-status">${formatDays(leaveDays(l))}</span>
-      </div>
-      <div class="item-sub">
-        <span class="badge badge-${l.type}">${LEAVE_TYPES[l.type].short}</span>
-        ${kindLabel(l)}
-      </div>
-      ${l.memo ? `<div class="item-memo">${escapeHtml(l.memo)}</div>` : ""}
-      ${shortage ? `<div class="item-warn">残日数が ${formatDays(shortage)} 足りません</div>` : ""}
-    </button>`;
-}
-
-// 一覧をタップしたら編集画面を開く
-[plannedList, takenList].forEach((listEl) => {
-  listEl.addEventListener("click", (e) => {
-    const item = e.target.closest("[data-id]");
-    if (item) openLeaveEdit(item.dataset.id);
-  });
-});
-
-document.getElementById("leaveAddBtn").addEventListener("click", () => openLeaveForm());
