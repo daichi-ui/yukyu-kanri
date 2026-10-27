@@ -37,7 +37,13 @@
       </section>
 
       <section id="tab-history" class="page" data-title="履歴" hidden>
-        <p class="placeholder">取得・予定の一覧をここに表示します（準備中）</p>
+        <button id="leaveAddBtn" class="btn btn-primary btn-block">＋ 取得・予定を登録</button>
+
+        <h2 class="section-title">予定</h2>
+        <div id="plannedList" class="list"></div>
+
+        <h2 class="section-title">取得済み</h2>
+        <div id="takenList" class="list"></div>
       </section>
 
       <section id="tab-grants" class="page" data-title="付与管理" hidden>
@@ -101,6 +107,61 @@
       </button>
     </nav>
   </div>
+
+  <!-- 取得・予定の入力画面（下から出る） -->
+  <dialog id="leaveDialog" class="sheet">
+    <form id="leaveForm">
+      <h2 id="leaveFormTitle" class="card-title">取得・予定を登録</h2>
+
+      <label class="field">
+        <span class="field-label">日付</span>
+        <input type="date" id="leaveDate" required>
+      </label>
+
+      <label class="field">
+        <span class="field-label">休暇の種別</span>
+        <select id="leaveType">
+          <option value="paid">有給休暇</option>
+          <option value="anniversary">アニバーサリー休暇</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field-label">取得種類</span>
+        <select id="leaveKind">
+          <option value="full">全休（1日）</option>
+          <option value="am">午前半休（0.5日）</option>
+          <option value="pm">午後半休（0.5日）</option>
+          <option value="hour">時間休</option>
+        </select>
+      </label>
+
+      <label id="leaveHoursField" class="field" hidden>
+        <span class="field-label">時間数（8時間＝1日）</span>
+        <select id="leaveHours">
+          <option value="1">1時間</option>
+          <option value="2">2時間</option>
+          <option value="3">3時間</option>
+          <option value="4">4時間</option>
+          <option value="5">5時間</option>
+          <option value="6">6時間</option>
+          <option value="7">7時間</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field-label">メモ（任意）</span>
+        <input type="text" id="leaveMemo" maxlength="100" placeholder="例：旅行、通院など">
+      </label>
+
+      <div class="form-actions">
+        <button type="button" id="leaveCancel" class="btn btn-sub">キャンセル</button>
+        <button type="submit" id="leaveSubmit" class="btn btn-primary">登録する</button>
+      </div>
+      <button type="button" id="leaveDelete" class="btn-delete" hidden>この登録を削除</button>
+      <p id="leaveMsg" class="msg"></p>
+    </form>
+  </dialog>
 
   <script type="module" src="app.js"></script>
 </body>
