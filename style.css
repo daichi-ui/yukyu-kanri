@@ -301,3 +301,64 @@ button { font: inherit; cursor: pointer; }
   color: var(--text);
 }
 .btn-danger { color: var(--error); }
+
+/* ===== 履歴 ===== */
+.btn-block {
+  display: block;
+  width: 100%;
+}
+.item-total {
+  font-size: 13px;
+  color: var(--sub);
+}
+.item-date {
+  font-weight: 700;
+}
+.item-button {
+  display: block;
+  width: 100%;
+  border: none;
+  text-align: left;
+  color: var(--text);
+}
+.item-button .item-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.item-warn {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--error);
+}
+
+/* ===== 下から出る入力画面 ===== */
+.sheet {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  margin: auto auto 0;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  border: none;
+  border-radius: 16px 16px 0 0;
+  background: var(--white);
+  color: var(--text);
+  overflow-y: auto;
+}
+.sheet::backdrop {
+  background: rgba(0, 0, 0, .4);
+}
+.field select:disabled {
+  background: var(--bg);
+  color: var(--sub);
+}
+.btn-delete {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px;
+  border: none;
+  background: none;
+  color: var(--error);
+  font-size: 14px;
+}
