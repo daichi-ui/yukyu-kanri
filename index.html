@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#2f7d6d">
+  <title>有給管理</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 読み込み中 -->
+  <div id="loading" class="loading">読み込み中...</div>
+
+  <!-- ログイン画面 -->
+  <section id="loginView" class="login" hidden>
+    <h1 class="login-title">有給管理</h1>
+    <p class="login-text">有給休暇とアニバーサリー休暇の<br>残日数を管理します</p>
+    <button id="loginBtn" class="btn btn-primary">Googleでログイン</button>
+    <p id="loginError" class="error"></p>
+  </section>
+
+  <!-- メイン画面 -->
+  <div id="appView" class="app" hidden>
+    <header class="header">
+      <h1 id="pageTitle" class="header-title">ホーム</h1>
+      <button id="logoutBtn" class="btn-text">ログアウト</button>
+    </header>
+
+    <main class="main">
+      <section id="tab-home" class="page" data-title="ホーム">
+        <p class="placeholder">残日数をここに表示します（準備中）</p>
+      </section>
+
+      <section id="tab-calendar" class="page" data-title="カレンダー" hidden>
+        <p class="placeholder">カレンダーをここに表示します（準備中）</p>
+      </section>
+
+      <section id="tab-history" class="page" data-title="履歴" hidden>
+        <p class="placeholder">取得・予定の一覧をここに表示します（準備中）</p>
+      </section>
+
+      <section id="tab-grants" class="page" data-title="付与管理" hidden>
+        <p class="placeholder">付与の登録・一覧をここに表示します（準備中）</p>
+      </section>
+    </main>
+
+    <!-- 下部タブ -->
+    <nav class="tabbar">
+      <button class="tab active" data-tab="home">
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+        <span>ホーム</span>
+      </button>
+      <button class="tab" data-tab="calendar">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        <span>カレンダー</span>
+      </button>
+      <button class="tab" data-tab="history">
+        <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        <span>履歴</span>
+      </button>
+      <button class="tab" data-tab="grants">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        <span>付与</span>
+      </button>
+    </nav>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
