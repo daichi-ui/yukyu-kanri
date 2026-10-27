@@ -1,8 +1,9 @@
 // ===== 付与管理 =====
-import { db } from "./firebase.js";
 import {
-  collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp
+  doc, addDoc, updateDoc, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { state, subscribe, grantsRef } from "./store.js";
+import { calculate } from "./calc.js";
 import {
   LEAVE_TYPES, today, calcExpireDate, latestGrantDate, formatDate, formatDays, escapeHtml
 } from "./utils.js";
@@ -20,75 +21,22 @@ const cancelBtn = document.getElementById("grantCancel");
 const msg = document.getElementById("grantMsg");
 const list = document.getElementById("grantList");
 
-// ===== 状態 =====
-let uid = null;
-let grants = [];        // 付与データの一覧
-let editingId = null;   // 編集中のデータID（新規登録なら null）
-let unsubscribe = null; // データ監視の停止用
+let editingId = null; // 編集中のデータID（新規登録なら null）
 
-// ===== 開始／終了（ログイン・ログアウト時に呼ぶ） =====
-export function initGrants(user) {
-  uid = user.uid;
-  resetForm();
-
-  let first = true;
-  unsubscribe = onSnapshot(grantsRef(), (snap) => {
-    grants = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    render();
-    // 初回の読み込み後に、アニバーサリー休暇の自動付与を確認
-    if (first) {
-      first = false;
-      ensureAnniversaryGrant();
-    }
-  });
-}
-
-export function stopGrants() {
-  if (unsubscribe) unsubscribe();
-  unsubscribe = null;
-  uid = null;
-  grants = [];
-  list.innerHTML = "";
-}
-
-// 他の画面からも付与データを使えるようにする
-export function getGrants() {
-  return grants;
-}
-
-function grantsRef() {
-  return collection(db, "users", uid, "grants");
-}
-
-// ===== アニバーサリー休暇の自動付与 =====
-// 直近の4月1日分がまだなければ、3日を自動で登録する
-async function ensureAnniversaryGrant() {
-  const grantDate = latestGrantDate(LEAVE_TYPES.anniversary.grantMonth);
-  const exists = grants.some((g) => g.type === "anniversary" && g.grantDate === grantDate);
-  if (exists) return;
-
-  const year = grantDate.slice(0, 4);
-  await setDoc(doc(db, "users", uid, "grants", `anniversary-${year}`), {
-    type: "anniversary",
-    grantDate,
-    days: LEAVE_TYPES.anniversary.days,
-    expireDate: calcExpireDate(grantDate, "anniversary"),
-    memo: "自動付与",
-    auto: true,
-    createdAt: serverTimestamp()
-  });
-}
+// データが変わったら一覧を描き直す
+subscribe(render);
 
 // ===== フォーム =====
 
 // 新規登録の初期状態に戻す
-function resetForm() {
+export function resetGrantForm() {
   editingId = null;
   form.reset();
   formTitle.textContent = "付与を登録";
   submitBtn.textContent = "登録する";
   cancelBtn.hidden = true;
   typeInput.disabled = false;
+  msg.textContent = "";
   setDefaults();
 }
 
@@ -112,7 +60,7 @@ typeInput.addEventListener("change", () => {
   else updateExpire();
 });
 dateInput.addEventListener("change", updateExpire);
-cancelBtn.addEventListener("click", resetForm);
+cancelBtn.addEventListener("click", resetGrantForm);
 
 // 登録・更新
 form.addEventListener("submit", async (e) => {
@@ -127,7 +75,7 @@ form.addEventListener("submit", async (e) => {
   if (!(days > 0)) return showMsg("付与日数を正しく入力してください", true);
 
   // 同じ種別・同じ付与日のデータがすでにあれば確認する
-  const duplicate = grants.some(
+  const duplicate = state.grants.some(
     (g) => g.type === type && g.grantDate === grantDate && g.id !== editingId
   );
   if (duplicate && !confirm("同じ付与日のデータがすでにあります。登録しますか？")) return;
@@ -142,14 +90,14 @@ form.addEventListener("submit", async (e) => {
 
   submitBtn.disabled = true;
   try {
-    if (editingId) {
+    const wasEditing = !!editingId;
+    if (wasEditing) {
       await updateDoc(doc(grantsRef(), editingId), data);
-      showMsg("更新しました");
     } else {
       await addDoc(grantsRef(), { ...data, createdAt: serverTimestamp() });
-      showMsg("登録しました");
     }
-    resetForm();
+    resetGrantForm();
+    showMsg(wasEditing ? "更新しました" : "登録しました");
   } catch (err) {
     showMsg("保存に失敗しました：" + err.message, true);
   } finally {
@@ -164,7 +112,7 @@ function showMsg(text, isError = false) {
 
 // 編集モードにする
 function startEdit(id) {
-  const g = grants.find((x) => x.id === id);
+  const g = state.grants.find((x) => x.id === id);
   if (!g) return;
   editingId = id;
   typeInput.value = g.type;
@@ -182,13 +130,13 @@ function startEdit(id) {
 
 // 削除
 async function remove(id) {
-  const g = grants.find((x) => x.id === id);
+  const g = state.grants.find((x) => x.id === id);
   if (!g) return;
   const label = `${LEAVE_TYPES[g.type].short} ${formatDate(g.grantDate)} 付与分`;
   if (!confirm(`${label}を削除しますか？`)) return;
   try {
     await deleteDoc(doc(grantsRef(), id));
-    if (editingId === id) resetForm();
+    if (editingId === id) resetGrantForm();
   } catch (err) {
     alert("削除に失敗しました：" + err.message);
   }
@@ -196,22 +144,31 @@ async function remove(id) {
 
 // ===== 一覧の表示 =====
 function render() {
-  if (grants.length === 0) {
+  if (!state.uid) {
+    list.innerHTML = "";
+    return;
+  }
+  if (state.grants.length === 0) {
     list.innerHTML = `<p class="empty">まだ付与が登録されていません</p>`;
     return;
   }
 
   const t = today();
-  const sorted = [...grants].sort((a, b) => b.grantDate.localeCompare(a.grantDate));
+  const { remainByGrant } = calculate(state.grants, state.leaves, t);
+  const sorted = [...state.grants].sort((a, b) => b.grantDate.localeCompare(a.grantDate));
 
   list.innerHTML = sorted.map((g) => {
     const expired = g.expireDate < t;
+    const notYet = g.grantDate > t;
+    const status = expired ? "失効" : notYet ? "付与前" : "有効";
+    const remain = remainByGrant[g.id] ?? g.days;
     return `
       <div class="item ${expired ? "is-expired" : ""}">
         <div class="item-head">
           <span class="badge badge-${g.type}">${LEAVE_TYPES[g.type].short}</span>
-          <span class="item-days">${formatDays(g.days)}</span>
-          <span class="item-status">${expired ? "失効" : "有効"}</span>
+          <span class="item-days">残り ${formatDays(remain)}</span>
+          <span class="item-total">／ ${formatDays(g.days)}</span>
+          <span class="item-status">${status}</span>
         </div>
         <div class="item-sub">
           付与日 ${formatDate(g.grantDate)}<br>

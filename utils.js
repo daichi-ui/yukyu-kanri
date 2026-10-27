@@ -59,6 +59,12 @@ export function formatDate(str) {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 }
 
+// "2026-10-28" → "2026年10月28日(水)"
+export function formatDateWeek(str) {
+  const week = ["日", "月", "火", "水", "木", "金", "土"];
+  return `${formatDate(str)}(${week.at(parseDate(str).getDay())})`;
+}
+
 // 20 → "20日"、0.125 → "0.125日"
 export function formatDays(num) {
   return `${Number(Number(num).toFixed(3))}日`;
