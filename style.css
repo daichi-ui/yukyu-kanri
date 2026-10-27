@@ -1,0 +1,156 @@
+/* ===== 基本 ===== */
+:root {
+  --main: #2f7d6d;
+  --main-light: #e6f2ef;
+  --text: #222;
+  --sub: #777;
+  --line: #e2e2e2;
+  --bg: #f6f7f7;
+  --white: #fff;
+  --error: #c0392b;
+  --tabbar-h: 64px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+button { font: inherit; cursor: pointer; }
+
+[hidden] { display: none !important; }
+
+/* ===== 読み込み中 ===== */
+.loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sub);
+}
+
+/* ===== ボタン ===== */
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-weight: 600;
+}
+.btn-primary {
+  background: var(--main);
+  color: var(--white);
+}
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--white);
+  font-size: 14px;
+  opacity: .9;
+}
+
+/* ===== ログイン画面 ===== */
+.login {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+.login-title {
+  margin: 0 0 8px;
+  color: var(--main);
+  font-size: 28px;
+}
+.login-text {
+  margin: 0 0 32px;
+  color: var(--sub);
+}
+.error {
+  color: var(--error);
+  font-size: 14px;
+  min-height: 1.6em;
+}
+
+/* ===== メイン画面 ===== */
+.app {
+  min-height: 100vh;
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--main);
+  color: var(--white);
+}
+.header-title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.main {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.placeholder {
+  background: var(--white);
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--sub);
+}
+
+/* ===== 下部タブ ===== */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--white);
+  border-top: 1px solid var(--line);
+}
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: var(--sub);
+  font-size: 11px;
+}
+.tab svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tab.active {
+  color: var(--main);
+  font-weight: 600;
+}
