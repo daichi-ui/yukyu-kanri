@@ -85,6 +85,8 @@ function render() {
   state.grants.forEach((g) => {
     (grantsByDate[g.grantDate] ||= []).push(g);
   });
+  const workByDate = {};
+  state.workdays.forEach((w) => { workByDate[w.date] = w; });
 
   // マスを作る（前月の空白 → 当月の日付 → 後ろの空白）
   const startOffset = new Date(year, month, 1).getDay();
@@ -101,17 +103,20 @@ function render() {
     const dow = (startOffset + d - 1) % 7;
     const leaves = leavesByDate[date] || [];
     const grants = grantsByDate[date] || [];
+    const work = workByDate[date];
     leaves.forEach((l) => { monthTotal += leaveDays(l); });
 
     const classes = [
       "cal-day",
       dow === 0 ? "is-sun" : "",
       dow === 6 ? "is-sat" : "",
+      work ? "is-work" : "",
       date === t ? "is-today" : "",
       date === selected ? "is-selected" : ""
     ].join(" ");
 
     const marks = [
+      ...(work ? [`<span class="cal-chip chip-work">出勤</span>`] : []),
       ...leaves.map((l) =>
         `<span class="cal-chip chip-${l.type} ${l.date > t ? "is-planned" : ""}">${shortKind(l)}</span>`),
       ...grants.map((g) => `<span class="cal-chip chip-grant">付与</span>`)
@@ -131,11 +136,11 @@ function render() {
   gridEl.innerHTML = cells.join("");
   monthTotalEl.textContent = `この月：${formatDays(monthTotal)}`;
 
-  renderDetail(leavesByDate[selected] || [], grantsByDate[selected] || [], t);
+  renderDetail(leavesByDate[selected] || [], grantsByDate[selected] || [], workByDate[selected], t);
 }
 
 // 選んだ日の内容
-function renderDetail(leaves, grants, t) {
+function renderDetail(leaves, grants, work, t) {
   detailTitleEl.textContent = formatDateWeek(selected);
 
   const leaveHtml = leaves.map((l) => `
@@ -156,7 +161,16 @@ function renderDetail(leaves, grants, t) {
       </div>
     </div>`).join("");
 
-  detailEl.innerHTML = leaveHtml + grantHtml || `<p class="empty">登録はありません</p>`;
+  const workHtml = work ? `
+    <div class="item">
+      <div class="item-head">
+        <span class="badge badge-work">出勤</span>
+        <span class="item-date">土曜出勤日</span>
+      </div>
+      ${work.memo ? `<div class="item-memo">${escapeHtml(work.memo)}</div>` : ""}
+    </div>` : "";
+
+  detailEl.innerHTML = workHtml + leaveHtml + grantHtml || `<p class="empty">登録はありません</p>`;
 }
 
 // 他の画面から特定の日付を開く用

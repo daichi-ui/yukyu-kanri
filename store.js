@@ -1,5 +1,5 @@
 // ===== データの読み込みと共有 =====
-// 付与データと取得データを Firestore から読み込み、各画面に知らせる
+// 付与・取得・土曜出勤日のデータを Firestore から読み込み、各画面に知らせる
 import { db } from "./firebase.js";
 import {
   collection, doc, setDoc, onSnapshot, serverTimestamp
@@ -9,7 +9,8 @@ import { LEAVE_TYPES, calcExpireDate, latestGrantDate } from "./utils.js";
 export const state = {
   uid: null,
   grants: [],  // 付与データ
-  leaves: []   // 取得データ（予定を含む）
+  leaves: [],  // 取得データ（予定を含む）
+  workdays: [] // 土曜出勤日
 };
 
 const listeners = [];
@@ -32,6 +33,10 @@ export function leavesRef() {
   return collection(db, "users", state.uid, "leaves");
 }
 
+export function workdaysRef() {
+  return collection(db, "users", state.uid, "workdays");
+}
+
 // ===== 開始／終了 =====
 export function initStore(user) {
   state.uid = user.uid;
@@ -50,6 +55,11 @@ export function initStore(user) {
     state.leaves = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     notify();
   }));
+
+  unsubscribes.push(onSnapshot(workdaysRef(), (snap) => {
+    state.workdays = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    notify();
+  }));
 }
 
 export function stopStore() {
@@ -58,6 +68,7 @@ export function stopStore() {
   state.uid = null;
   state.grants = [];
   state.leaves = [];
+  state.workdays = [];
   notify();
 }
 

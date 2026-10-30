@@ -117,9 +117,13 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
+// メッセージを表示して、3秒後に消す
+let msgTimer = null;
 function showMsg(text, isError = false) {
   msg.textContent = text;
   msg.classList.toggle("error", isError);
+  clearTimeout(msgTimer);
+  msgTimer = setTimeout(() => { msg.textContent = ""; }, 3000);
 }
 
 // 編集モードにする
