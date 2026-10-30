@@ -151,15 +151,10 @@ svg {
 .login-icon {
   width: 88px;
   height: 88px;
-  display: grid;
-  place-items: center;
   margin-bottom: 20px;
-  border-radius: 22px;
-  background: linear-gradient(160deg, #3d9bff, #0062e6);
-  color: #fff;
-  box-shadow: 0 8px 24px rgba(0, 122, 255, .3);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .1), 0 0 0 .5px var(--separator);
 }
-.login-icon svg { width: 48px; height: 48px; stroke-width: 1.8; }
 .login-title {
   margin: 0 0 8px;
   font-size: 34px;
