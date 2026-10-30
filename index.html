@@ -30,12 +30,23 @@
 
   <!-- メイン画面 -->
   <div id="appView" class="app" hidden>
-    <header class="navbar">
-      <button id="logoutBtn" class="nav-link">ログアウト</button>
+    <!-- 上部のナビゲーションバー（スクロールすると小さいタイトルが出る） -->
+    <header id="navbar" class="navbar">
+      <span id="navTitle" class="navbar-title">ホーム</span>
     </header>
 
     <main class="main">
-      <h1 id="pageTitle" class="large-title">ホーム</h1>
+      <!-- 大きなタイトル -->
+      <div class="title-row">
+        <div class="title-text">
+          <p id="todayText" class="title-eyebrow"></p>
+          <h1 id="pageTitle" class="large-title">ホーム</h1>
+        </div>
+        <button id="accountBtn" class="avatar" aria-label="アカウント">
+          <img id="avatarImg" alt="" hidden referrerpolicy="no-referrer">
+          <span id="avatarText"></span>
+        </button>
+      </div>
 
       <!-- ===== ホーム ===== -->
       <section id="tab-home" class="page" data-title="ホーム">
@@ -75,6 +86,7 @@
               <span class="cal-chip chip-anniversary">アニバ</span>
               <span class="cal-chip chip-paid is-planned">予定</span>
               <span class="cal-chip chip-grant">付与</span>
+              <span class="cal-chip chip-work">出勤</span>
             </div>
             <span id="calMonthTotal" class="cal-total"></span>
           </div>
@@ -85,8 +97,15 @@
         <button id="calAddBtn" class="btn btn-tinted btn-block cal-add">この日に登録</button>
       </section>
 
-      <!-- ===== 付与管理 ===== -->
-      <section id="tab-grants" class="page" data-title="付与" hidden>
+      <!-- ===== 管理（付与・土曜出勤） ===== -->
+      <section id="tab-grants" class="page" data-title="管理" hidden>
+        <!-- 切り替えボタン（iOS のセグメントコントロール） -->
+        <div class="segmented" role="tablist">
+          <button type="button" class="segment active" data-seg="grants" role="tab">付与</button>
+          <button type="button" class="segment" data-seg="workdays" role="tab">土曜出勤</button>
+        </div>
+
+        <div id="seg-grants" class="seg-page">
         <form id="grantForm">
           <h2 id="grantFormTitle" class="group-title">付与を登録</h2>
           <div class="group">
@@ -133,6 +152,32 @@
 
         <h2 class="group-title">付与の一覧</h2>
         <div id="grantList" class="list"></div>
+        </div>
+
+        <!-- 土曜出勤日 -->
+        <div id="seg-workdays" class="seg-page" hidden>
+          <form id="workForm">
+            <h2 class="group-title">土曜出勤日を追加</h2>
+            <div class="group">
+              <label class="field">
+                <span class="field-label">日付</span>
+                <input type="date" id="workDate" required>
+              </label>
+              <label class="field">
+                <span class="field-label">メモ</span>
+                <input type="text" id="workMemo" maxlength="100" placeholder="任意">
+              </label>
+            </div>
+            <p class="group-note">追加すると、日付が自動で次の週の土曜日に進みます。続けて入力できます。</p>
+
+            <div class="form-actions">
+              <button type="submit" id="workSubmit" class="btn btn-primary btn-block">追加する</button>
+            </div>
+            <p id="workMsg" class="msg"></p>
+          </form>
+
+          <div id="workList"></div>
+        </div>
       </section>
     </main>
 
@@ -147,11 +192,25 @@
         <span>カレンダー</span>
       </button>
       <button class="tab" data-tab="grants">
-        <svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-2-4-6-4-6-1.5S9 8 12 8zm0 0c2-4 6-4 6-1.5S15 8 12 8z"/></svg>
-        <span>付与</span>
+        <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+        <span>管理</span>
       </button>
     </nav>
   </div>
+
+  <!-- アカウントのメニュー（下から出るアクションシート） -->
+  <dialog id="accountSheet" class="action-sheet">
+    <div class="action-group">
+      <div class="action-header">
+        <span class="action-header-title">ログイン中のアカウント</span>
+        <span id="accountEmail" class="action-header-sub"></span>
+      </div>
+      <button type="button" id="logoutBtn" class="action-button action-danger">ログアウト</button>
+    </div>
+    <div class="action-group">
+      <button type="button" id="accountCancel" class="action-button action-bold">キャンセル</button>
+    </div>
+  </dialog>
 
   <!-- 取得・予定の入力画面（下から出るシート） -->
   <dialog id="leaveDialog" class="sheet">

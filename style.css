@@ -178,31 +178,150 @@ svg {
   padding-bottom: calc(var(--tabbar-h) + 32px + env(safe-area-inset-bottom));
 }
 
-/* 上部バー（半透明） */
+/* 上部のナビゲーションバー
+   一番上では透明で何も見えず、スクロールすると
+   すりガラスの背景・区切り線・小さいタイトルが出る（iOS と同じ動き） */
 .navbar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 20;
   display: flex;
-  justify-content: flex-end;
-  padding: env(safe-area-inset-top) 16px 0;
+  align-items: center;
+  justify-content: center;
+  height: calc(44px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+  background: transparent;
+  border-bottom: .5px solid transparent;
+  pointer-events: none;
+  transition: background .2s, border-color .2s;
+}
+.navbar.is-scrolled {
   background: var(--bar-bg);
+  border-bottom-color: var(--separator);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
+}
+.navbar-title {
+  font-size: 17px;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .2s, transform .2s;
+}
+.navbar.is-scrolled .navbar-title {
+  opacity: 1;
+  transform: none;
 }
 
 .main {
   max-width: 640px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: calc(44px + env(safe-area-inset-top)) 16px 0;
 }
 
+/* 大きなタイトルの行（左：日付とタイトル、右：アカウント） */
+.title-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 4px 16px;
+}
+.title-text { min-width: 0; }
+.title-eyebrow {
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--label-2);
+}
 .large-title {
-  margin: 4px 4px 12px;
+  margin: 0;
   font-size: 34px;
   font-weight: 700;
+  line-height: 1.15;
   letter-spacing: .01em;
 }
+
+/* アカウントの丸いアイコン */
+.avatar {
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 4px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(160deg, #a0a7b4, #6e7582);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  transition: transform .15s, opacity .15s;
+}
+.avatar:active { transform: scale(.92); opacity: .8; }
+.avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* アクションシート（ログアウトなどのメニュー） */
+.action-sheet {
+  width: 100%;
+  max-width: 420px;
+  margin: auto auto 0;
+  padding: 0 8px calc(8px + env(safe-area-inset-bottom));
+  border: none;
+  background: transparent;
+  color: var(--label);
+  overflow: visible;
+}
+.action-sheet[open] { animation: sheet-up .3s cubic-bezier(.2, .9, .3, 1); }
+.action-sheet::backdrop { background: rgba(0, 0, 0, .35); }
+.action-group {
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--bar-bg);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
+}
+.action-group + .action-group { margin-top: 8px; }
+.action-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  text-align: center;
+  border-bottom: .5px solid var(--separator);
+}
+.action-header-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label-2);
+}
+.action-header-sub {
+  font-size: 13px;
+  color: var(--label-2);
+  word-break: break-all;
+}
+.action-button {
+  display: block;
+  width: 100%;
+  min-height: 57px;
+  border: none;
+  background: none;
+  font-size: 20px;
+  color: var(--blue);
+}
+.action-button:active { background: var(--fill); }
+.action-danger { color: var(--red); }
+.action-bold { font-weight: 600; }
 
 /* ===== グループ（iOS の inset grouped リスト） ===== */
 .group-title {
@@ -695,3 +814,47 @@ svg {
 
 /* メッセージが空のときは場所を取らない */
 .msg:empty { min-height: 0; margin: 0; }
+
+/* ===== 土曜出勤日 ===== */
+:root { --indigo: #5856d6; }
+@media (prefers-color-scheme: dark) { :root { --indigo: #5e5ce6; } }
+
+.badge-work { background: color-mix(in srgb, var(--indigo) 15%, transparent); color: var(--indigo); }
+.chip-work { background: var(--indigo); color: #fff; }
+/* 出勤日は日付の数字を平日と同じ色にする */
+.cal-day.is-sat.is-work .cal-num { color: var(--label); }
+.cal-day.is-today.is-work .cal-num,
+.cal-day.is-selected.is-work .cal-num { color: #fff; }
+.cal-day.is-selected.is-work:not(.is-today) .cal-num { color: var(--surface); }
+.item.is-past { opacity: .45; }
+.item-end { margin-left: auto; }
+
+/* ===== セグメントコントロール（付与／土曜出勤の切り替え） ===== */
+.segmented {
+  display: flex;
+  padding: 2px;
+  margin: 0 0 8px;
+  border-radius: 9px;
+  background: var(--fill);
+}
+.segment {
+  flex: 1;
+  min-height: 32px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label);
+  transition: background .2s, box-shadow .2s;
+}
+.segment.active {
+  background: var(--surface);
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .12), 0 3px 1px rgba(0, 0, 0, .04);
+}
+@media (prefers-color-scheme: dark) {
+  .segment.active { background: #636366; }
+}
+.seg-page > form > .group-title:first-child,
+.seg-page > .group-title:first-child { margin-top: 20px; }
