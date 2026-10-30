@@ -858,3 +858,56 @@ svg {
 }
 .seg-page > form > .group-title:first-child,
 .seg-page > .group-title:first-child { margin-top: 20px; }
+
+/* ===== ホーム：土曜出勤（今年度） ===== */
+.work-card {
+  margin: -4px 0 16px;
+  padding: 14px 16px 16px;
+  border-radius: 16px;
+  background: var(--surface);
+}
+.work-card:empty { display: none; }
+.work-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.work-label::before { background: var(--indigo); }
+.work-period {
+  font-size: 12px;
+  color: var(--label-2);
+  font-variant-numeric: tabular-nums;
+}
+.work-main {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 6px 0 10px;
+}
+.work-num { color: var(--indigo); }
+.work-total {
+  font-family: var(--font-rounded);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--label-2);
+}
+.work-sub {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--label-2);
+}
+.work-bar {
+  height: 6px;
+  margin-bottom: 10px;
+  border-radius: 3px;
+  background: var(--fill);
+  overflow: hidden;
+}
+.work-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--indigo);
+  transition: width .3s;
+}

@@ -9,6 +9,7 @@ import {
 
 const summaryEl = document.getElementById("homeSummary");
 const monthTitleEl = document.getElementById("homeMonthTitle");
+const workEl = document.getElementById("homeWork");
 const monthListEl = document.getElementById("homeMonth");
 
 const SOON_DAYS = 90; // 失効まで何日以内なら赤く表示するか
@@ -23,6 +24,7 @@ function daysUntil(dateStr, todayStr) {
 function render() {
   if (!state.uid) {
     summaryEl.innerHTML = "";
+    workEl.innerHTML = "";
     monthListEl.innerHTML = "";
     return;
   }
@@ -50,6 +52,8 @@ function render() {
         </div>
       </div>`;
   }).join("");
+
+  renderWork(t);
 
   // ===== 今月の取得・予定 =====
   const month = t.slice(0, 7); // "2026-10"
@@ -88,3 +92,45 @@ monthListEl.addEventListener("click", (e) => {
 });
 
 document.getElementById("homeAddBtn").addEventListener("click", () => openLeaveForm());
+
+// ===== 今年度の土曜出勤日 =====
+// 年度は 4月1日〜翌年3月31日（例：2026年10月なら 2026/04/01〜2027/03/31）
+function fiscalYear(todayStr) {
+  const y = Number(todayStr.slice(0, 4));
+  const m = Number(todayStr.slice(5, 7));
+  const start = m >= 4 ? y : y - 1;
+  return { from: `${start}-04-01`, to: `${start + 1}-03-31` };
+}
+
+function renderWork(t) {
+  const { from, to } = fiscalYear(t);
+  const days = state.workdays
+    .filter((w) => from <= w.date && w.date <= to)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const done = days.filter((w) => w.date <= t).length; // 消化した日（今日を含む）
+  const total = days.length;                            // 登録済みの日（未来も含む）
+  const next = days.find((w) => w.date > t);
+  const percent = total ? Math.round((done / total) * 100) : 0;
+  const slash = (d) => d.replaceAll("-", "/");
+
+  workEl.innerHTML = `
+    <div class="work-head">
+      <span class="summary-label work-label">土曜出勤（今年度）</span>
+      <span class="work-period">${slash(from)}〜${slash(to)}</span>
+    </div>
+    <div class="work-main">
+      <span class="summary-num work-num">${done}</span>
+      <span class="work-total">／ ${total}日</span>
+      <span class="work-sub">消化済み</span>
+    </div>
+    <div class="work-bar" role="progressbar" aria-valuenow="${done}" aria-valuemin="0" aria-valuemax="${total}">
+      <span style="width:${percent}%"></span>
+    </div>
+    <div class="summary-expire">
+      ${total === 0
+        ? "今年度の土曜出勤日はまだ登録されていません"
+        : next
+          ? `次の出勤日：${formatDateWeek(next.date)}（残り${total - done}日）`
+          : "今年度の土曜出勤はすべて消化しました"}
+    </div>`;
+}
