@@ -5,6 +5,7 @@ import "./leaves.js";
 import "./home.js";
 import "./calendar.js";
 import { resetWorkForm } from "./workdays.js";
+import { draggableSheet, closeSheet } from "./motion.js";
 import {
   GoogleAuthProvider,
   signInWithPopup,
@@ -70,10 +71,13 @@ function setAccount(user) {
 }
 
 document.getElementById("accountBtn").addEventListener("click", () => accountSheet.showModal());
-document.getElementById("accountCancel").addEventListener("click", () => accountSheet.close());
+document.getElementById("accountCancel").addEventListener("click", () => closeSheet(accountSheet));
 accountSheet.addEventListener("click", (e) => {
-  if (e.target === accountSheet) accountSheet.close();
+  if (e.target === accountSheet) closeSheet(accountSheet);
 });
+
+// 入力シートは上のつまみを下にドラッグしても閉じる
+draggableSheet(document.getElementById("leaveDialog"), closeSheet);
 
 document.getElementById("logoutBtn").addEventListener("click", () => {
   accountSheet.close();
@@ -96,18 +100,29 @@ window.addEventListener("scroll", onScroll, { passive: true });
 
 // ===== タブ切り替え =====
 const TABS = ["home", "calendar", "grants"];
+let current = null;
 
 function showTab(name) {
   if (!TABS.includes(name)) name = "home";
+  const changed = name !== current;
+  current = name;
 
-  // ページの表示切り替え
+  // ページの表示切り替え（開いた画面はふわっと出す）
   document.querySelectorAll(".page").forEach((page) => {
-    page.hidden = page.id !== `tab-${name}`;
+    const show = page.id === `tab-${name}`;
+    page.hidden = !show;
+    if (show && changed) {
+      page.classList.remove("page-enter");
+      void page.offsetWidth;
+      page.classList.add("page-enter");
+    }
   });
 
-  // タブボタンの見た目
-  document.querySelectorAll(".tab").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.tab === name);
+  // タブボタンの見た目（選んだタブの下を板がすべる）
+  document.querySelectorAll(".tab").forEach((btn, i) => {
+    const on = btn.dataset.tab === name;
+    btn.classList.toggle("active", on);
+    if (on) document.querySelector(".tabbar").style.setProperty("--tab", i);
   });
 
   // ヘッダーのタイトル
@@ -134,6 +149,12 @@ document.querySelectorAll(".segment").forEach((btn) => {
     });
     document.querySelectorAll(".seg-page").forEach((page) => {
       page.hidden = page.id !== `seg-${name}`;
+      if (!page.hidden) {
+        page.classList.remove("page-enter");
+        void page.offsetWidth;
+        page.classList.add("page-enter");
+      }
     });
+    btn.parentElement.style.setProperty("--seg", [...document.querySelectorAll(".segment")].indexOf(btn));
   });
 });
