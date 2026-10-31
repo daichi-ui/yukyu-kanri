@@ -1,10 +1,13 @@
 // ===== カレンダー =====
 import { state, subscribe } from "./store.js";
-import { leaveDays, kindLabel } from "./calc.js";
+import { leaveDays, calculate } from "./calc.js";
+import { leaveRow } from "./home.js";
 import { openLeaveForm, openLeaveEdit } from "./leaves.js";
 import {
   LEAVE_TYPES, today, toDateStr, parseDate, formatDateWeek, formatDays, escapeHtml
 } from "./utils.js";
+
+let slideDir = 0; // 月を変えた向き（すべり込みの動きに使う）
 
 // ===== 画面の要素 =====
 const titleEl = document.getElementById("calTitle");
@@ -26,13 +29,25 @@ function moveMonth(diff) {
   const d = new Date(year, month + diff, 1);
   year = d.getFullYear();
   month = d.getMonth();
+  slideDir = diff;
   render();
 }
+
+// 左右のスワイプで月を移動
+let x0 = null;
+gridEl.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+gridEl.addEventListener("touchend", (e) => {
+  if (x0 === null) return;
+  const dx = e.changedTouches[0].clientX - x0;
+  x0 = null;
+  if (Math.abs(dx) > 50) moveMonth(dx < 0 ? 1 : -1);
+}, { passive: true });
 
 document.getElementById("calPrev").addEventListener("click", () => moveMonth(-1));
 document.getElementById("calNext").addEventListener("click", () => moveMonth(1));
 document.getElementById("calToday").addEventListener("click", () => {
   const d = new Date();
+  slideDir = (d.getFullYear() * 12 + d.getMonth()) - (year * 12 + month);
   year = d.getFullYear();
   month = d.getMonth();
   selected = today();
@@ -45,6 +60,8 @@ gridEl.addEventListener("click", (e) => {
   if (!cell) return;
   selected = cell.dataset.date;
   render();
+  // タップしたマスに波紋
+  gridEl.querySelector(`[data-date="${selected}"]`)?.classList.add("is-tapped");
 });
 
 // 詳細の予定をタップ → 編集
@@ -58,12 +75,10 @@ document.getElementById("calAddBtn").addEventListener("click", () => openLeaveFo
 
 // ===== 表示 =====
 
-// カレンダーのマス内に出す短い表示
-function shortKind(l) {
-  if (l.kind === "am") return "AM";
-  if (l.kind === "pm") return "PM";
-  if (l.kind === "hour") return `${l.hours}h`;
-  return "休";
+// マスの中の印：休みは色の丸（半休は半分、時間休は小さな丸）、予定は点線
+function leaveMark(l, t) {
+  const shape = l.kind === "am" ? "is-am" : l.kind === "pm" ? "is-pm" : l.kind === "hour" ? "is-hour" : "";
+  return `<span class="mark mark-${l.type} ${shape} ${l.date > t ? "is-planned" : ""}"></span>`;
 }
 
 function render() {
@@ -115,16 +130,18 @@ function render() {
       date === selected ? "is-selected" : ""
     ].join(" ");
 
-    const marks = [
-      ...(work ? [`<span class="cal-chip chip-work">出勤</span>`] : []),
-      ...leaves.map((l) =>
-        `<span class="cal-chip chip-${l.type} ${l.date > t ? "is-planned" : ""}">${shortKind(l)}</span>`),
-      ...grants.map((g) => `<span class="cal-chip chip-grant">付与</span>`)
-    ].join("");
+    const marks = leaves.map((l) => leaveMark(l, t)).join("");
+    const label = [
+      formatDateWeek(date),
+      work ? "土曜出勤" : "",
+      ...leaves.map((l) => `${LEAVE_TYPES[l.type].short}${l.date > t ? "の予定" : ""}`),
+      grants.length ? "付与日" : ""
+    ].filter(Boolean).join("、");
 
     cells.push(`
-      <button class="${classes}" data-date="${date}">
+      <button class="${classes}" data-date="${date}" aria-label="${label}" aria-pressed="${date === selected}">
         <span class="cal-num">${d}</span>
+        ${grants.length ? `<span class="grant-star" aria-hidden="true">★</span>` : ""}
         <span class="cal-marks">${marks}</span>
       </button>`);
   }
@@ -134,7 +151,14 @@ function render() {
   }
 
   gridEl.innerHTML = cells.join("");
-  monthTotalEl.textContent = `この月：${formatDays(monthTotal)}`;
+  // 月を変えたときは、進んだ向きからすべり込ませる
+  gridEl.classList.remove("slide-next", "slide-prev");
+  if (slideDir) {
+    void gridEl.offsetWidth;
+    gridEl.classList.add(slideDir > 0 ? "slide-next" : "slide-prev");
+    slideDir = 0;
+  }
+  monthTotalEl.textContent = `この月 ${formatDays(monthTotal)}`;
 
   renderDetail(leavesByDate[selected] || [], grantsByDate[selected] || [], workByDate[selected], t);
 }
@@ -142,35 +166,32 @@ function render() {
 // 選んだ日の内容
 function renderDetail(leaves, grants, work, t) {
   detailTitleEl.textContent = formatDateWeek(selected);
+  const { shortageByLeave } = calculate(state.grants, state.leaves, t);
 
-  const leaveHtml = leaves.map((l) => `
-    <button class="item item-button" data-id="${l.id}">
-      <div class="item-head">
-        <span class="badge badge-${l.type}">${LEAVE_TYPES[l.type].short}</span>
-        <span class="item-date">${kindLabel(l)}</span>
-        <span class="item-status">${l.date > t ? "予定" : "取得済み"}・${formatDays(leaveDays(l))}</span>
-      </div>
-      ${l.memo ? `<div class="item-memo">${escapeHtml(l.memo)}</div>` : ""}
-    </button>`).join("");
+  const leaveHtml = leaves.map((l) => leaveRow(l, t, shortageByLeave[l.id], { showDate: false })).join("");
 
   const grantHtml = grants.map((g) => `
-    <div class="item">
-      <div class="item-head">
-        <span class="badge badge-${g.type}">${LEAVE_TYPES[g.type].short}</span>
-        <span class="item-date">${formatDays(g.days)} 付与</span>
-      </div>
+    <div class="info-row type-${g.type}">
+      <span class="info-icon">★</span>
+      <span class="leave-text">
+        <span class="leave-title">${LEAVE_TYPES[g.type].label}が ${formatDays(g.days)} 付与</span>
+        <span class="leave-sub">${g.expireDate.replaceAll("-", "/")} まで有効</span>
+      </span>
     </div>`).join("");
 
   const workHtml = work ? `
-    <div class="item">
-      <div class="item-head">
-        <span class="badge badge-work">出勤</span>
-        <span class="item-date">土曜出勤日</span>
-      </div>
-      ${work.memo ? `<div class="item-memo">${escapeHtml(work.memo)}</div>` : ""}
+    <div class="info-row type-work">
+      <span class="info-icon"><svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></span>
+      <span class="leave-text">
+        <span class="leave-title">土曜出勤</span>
+        ${work.memo ? `<span class="leave-sub">${escapeHtml(work.memo)}</span>` : ""}
+      </span>
     </div>` : "";
 
-  detailEl.innerHTML = workHtml + leaveHtml + grantHtml || `<p class="empty">登録はありません</p>`;
+  detailEl.innerHTML = workHtml + leaveHtml + grantHtml || `<p class="empty">この日の登録はありません</p>`;
+  detailEl.classList.remove("pop");
+  void detailEl.offsetWidth;
+  detailEl.classList.add("pop");
 }
 
 // 他の画面から特定の日付を開く用

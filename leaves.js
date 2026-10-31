@@ -4,7 +4,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { state, leavesRef } from "./store.js";
 import { calculate } from "./calc.js";
-import { today, formatDays } from "./utils.js";
+import { today, formatDays, formatDateWeek, LEAVE_TYPES } from "./utils.js";
+import { burst, toast, closeSheet } from "./motion.js";
 
 // ===== 画面の要素 =====
 const dialog = document.getElementById("leaveDialog");
@@ -22,6 +23,40 @@ const msg = document.getElementById("leaveMsg");
 
 let editingId = null; // 編集中のデータID（新規登録なら null）
 
+// ===== 選択ボタン =====
+// 種別・取得種類・時間数は、隠した select をボタンで切り替える（計算は select の値を使う）
+const choices = [...form.querySelectorAll(".choice[data-for]")];
+
+function syncChoices() {
+  choices.forEach((group) => {
+    const select = document.getElementById(group.dataset.for);
+    group.querySelectorAll("[data-value]").forEach((b) => {
+      const on = b.dataset.value === select.value;
+      b.classList.toggle("is-on", on);
+      b.setAttribute("aria-pressed", String(on));
+      b.disabled = select.disabled;
+    });
+    // 選んだボタンの下を動く板
+    const on = group.querySelector(".is-on");
+    if (on) {
+      group.style.setProperty("--x", `${on.offsetLeft}px`);
+      group.style.setProperty("--w", `${on.offsetWidth}px`);
+    }
+    group.classList.toggle("is-disabled", select.disabled);
+  });
+}
+
+choices.forEach((group) => {
+  group.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-value]");
+    if (!b || b.disabled) return;
+    const select = document.getElementById(group.dataset.for);
+    select.value = b.dataset.value;
+    select.dispatchEvent(new Event("change"));
+    syncChoices();
+  });
+});
+
 // ===== 入力画面（ダイアログ） =====
 
 // 新規登録で開く（カレンダーからは日付を指定して開く）
@@ -35,6 +70,7 @@ export function openLeaveForm(date = today()) {
   updateKindFields();
   msg.textContent = "";
   dialog.showModal();
+  syncChoices();
 }
 
 // 編集で開く
@@ -53,6 +89,7 @@ export function openLeaveEdit(id) {
   updateKindFields();
   msg.textContent = "";
   dialog.showModal();
+  syncChoices();
 }
 
 // 種別・取得種類に合わせて入力欄を切り替え
@@ -62,15 +99,16 @@ function updateKindFields() {
   if (isAnniversary) kindInput.value = "full";
   kindInput.disabled = isAnniversary;
   hoursField.hidden = kindInput.value !== "hour";
+  syncChoices();
 }
 
 typeInput.addEventListener("change", updateKindFields);
 kindInput.addEventListener("change", updateKindFields);
-document.getElementById("leaveCancel").addEventListener("click", () => dialog.close());
+document.getElementById("leaveCancel").addEventListener("click", () => closeSheet(dialog));
 
 // 背景をタップしたら閉じる
 dialog.addEventListener("click", (e) => {
-  if (e.target === dialog) dialog.close();
+  if (e.target === dialog) closeSheet(dialog);
 });
 
 // 登録・更新
@@ -101,12 +139,19 @@ form.addEventListener("submit", async (e) => {
 
   submitBtn.disabled = true;
   try {
+    const isNew = !editingId;
     if (editingId) {
       await updateDoc(doc(leavesRef(), editingId), data);
     } else {
       await addDoc(leavesRef(), { ...data, createdAt: serverTimestamp() });
     }
-    dialog.close();
+    // 新しく登録したときは、ボタンのあたりから紙吹雪
+    if (isNew) {
+      const r = submitBtn.getBoundingClientRect();
+      burst(r.left + r.width / 2, r.top + r.height / 2);
+    }
+    closeSheet(dialog);
+    toast(`${formatDateWeek(data.date)} の${LEAVE_TYPES[data.type].short}を${isNew ? "登録" : "更新"}しました`);
   } catch (err) {
     showMsg("保存に失敗しました：" + err.message, true);
   } finally {
@@ -120,7 +165,8 @@ deleteBtn.addEventListener("click", async () => {
   if (!confirm("この登録を削除しますか？")) return;
   try {
     await deleteDoc(doc(leavesRef(), editingId));
-    dialog.close();
+    closeSheet(dialog);
+    toast("削除しました");
   } catch (err) {
     showMsg("削除に失敗しました：" + err.message, true);
   }

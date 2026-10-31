@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f4f6f9" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b0f17" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="有給管理">
@@ -56,7 +56,9 @@
         <div id="homeSummary" class="summary"></div>
         <div id="homeWork" class="work-card"></div>
 
-        <button id="homeAddBtn" class="btn btn-primary btn-block">取得・予定を登録</button>
+        <button id="homeAddBtn" class="btn btn-primary btn-block btn-add">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>休みを登録
+        </button>
 
         <h2 id="homeMonthTitle" class="group-title"></h2>
         <div id="homeMonth" class="list"></div>
@@ -86,11 +88,11 @@
 
           <div class="cal-foot">
             <div class="cal-legend">
-              <span class="cal-chip chip-paid">有給</span>
-              <span class="cal-chip chip-anniversary">アニバ</span>
-              <span class="cal-chip chip-paid is-planned">予定</span>
-              <span class="cal-chip chip-grant">付与</span>
-              <span class="cal-chip chip-work">出勤</span>
+              <span><i class="mark mark-paid"></i>有給</span>
+              <span><i class="mark mark-anniversary"></i>アニバ</span>
+              <span><i class="mark mark-paid is-planned"></i>予定</span>
+              <span><i class="legend-work"></i>出勤</span>
+              <span><i class="legend-star">★</i>付与</span>
             </div>
             <span id="calMonthTotal" class="cal-total"></span>
           </div>
@@ -105,6 +107,7 @@
       <section id="tab-grants" class="page" data-title="管理" hidden>
         <!-- 切り替えボタン（iOS のセグメントコントロール） -->
         <div class="segmented" role="tablist">
+          <span class="segment-indicator" aria-hidden="true"></span>
           <button type="button" class="segment active" data-seg="grants" role="tab">付与</button>
           <button type="button" class="segment" data-seg="workdays" role="tab">土曜出勤</button>
         </div>
@@ -187,6 +190,7 @@
 
     <!-- 下部タブ -->
     <nav class="tabbar">
+      <span class="tab-indicator" aria-hidden="true"></span>
       <button class="tab active" data-tab="home">
         <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
         <span>ホーム</span>
@@ -231,27 +235,46 @@
           <input type="date" id="leaveDate" required>
         </label>
 
-        <label class="field">
+        <div class="field field-stack">
           <span class="field-label">種別</span>
-          <select id="leaveType">
+          <div class="choice choice-type" data-for="leaveType" role="group" aria-label="種別">
+            <button type="button" data-value="paid">有給休暇</button>
+            <button type="button" data-value="anniversary">アニバーサリー</button>
+          </div>
+          <select id="leaveType" hidden>
             <option value="paid">有給休暇</option>
             <option value="anniversary">アニバーサリー休暇</option>
           </select>
-        </label>
+        </div>
 
-        <label class="field">
+        <div class="field field-stack">
           <span class="field-label">取得種類</span>
-          <select id="leaveKind">
+          <div class="choice" data-for="leaveKind" role="group" aria-label="取得種類">
+            <button type="button" data-value="full">全休</button>
+            <button type="button" data-value="am">午前半休</button>
+            <button type="button" data-value="pm">午後半休</button>
+            <button type="button" data-value="hour">時間休</button>
+          </div>
+          <select id="leaveKind" hidden>
             <option value="full">全休（1日）</option>
             <option value="am">午前半休（0.5日）</option>
             <option value="pm">午後半休（0.5日）</option>
             <option value="hour">時間休</option>
           </select>
-        </label>
+        </div>
 
-        <label id="leaveHoursField" class="field" hidden>
+        <div id="leaveHoursField" class="field field-stack" hidden>
           <span class="field-label">時間数</span>
-          <select id="leaveHours">
+          <div class="choice choice-hours" data-for="leaveHours" role="group" aria-label="時間数">
+            <button type="button" data-value="1">1h</button>
+            <button type="button" data-value="2">2h</button>
+            <button type="button" data-value="3">3h</button>
+            <button type="button" data-value="4">4h</button>
+            <button type="button" data-value="5">5h</button>
+            <button type="button" data-value="6">6h</button>
+            <button type="button" data-value="7">7h</button>
+          </div>
+          <select id="leaveHours" hidden>
             <option value="1">1時間</option>
             <option value="2">2時間</option>
             <option value="3">3時間</option>
@@ -260,14 +283,14 @@
             <option value="6">6時間</option>
             <option value="7">7時間</option>
           </select>
-        </label>
+        </div>
 
         <label class="field">
           <span class="field-label">メモ</span>
           <input type="text" id="leaveMemo" maxlength="100" placeholder="任意（旅行、通院など）">
         </label>
       </div>
-      <p class="group-note">時間休は 8時間＝1日 で計算します。</p>
+      <p class="group-note">時間休は 8時間で1日として計算します。</p>
 
       <div class="group" id="leaveDeleteGroup">
         <button type="button" id="leaveDelete" class="row-button row-danger" hidden>この登録を削除</button>
